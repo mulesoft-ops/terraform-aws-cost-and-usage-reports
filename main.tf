@@ -51,6 +51,8 @@ resource "aws_s3_bucket_notification" "cost_and_usage_notification" {
 
 resource "aws_sns_topic" "cost_and_usage" {
   name = "${var.name_prefix}-topic"
+
+  tags = var.tags
 }
 
 resource "aws_sns_topic_policy" "cost_and_usage" {
@@ -114,6 +116,8 @@ resource "aws_iam_role" "glue" {
 }
 EOF
 
+  tags = var.tags
+
 }
 
 resource "aws_iam_role_policy_attachment" "glue_service" {
@@ -154,6 +158,8 @@ resource "aws_glue_crawler" "glue_crawler" {
   s3_target {
     path = "s3://${aws_s3_bucket.cost_and_usage.id}/parquet/"
   }
+
+  tags = var.tags
 }
 
 # ------------------------------------------------------------------------------
@@ -163,6 +169,7 @@ resource "aws_glue_crawler" "glue_crawler" {
 data "aws_s3_bucket_object" "manifest_processor" {
   bucket = var.source_bucket
   key    = "${var.source_path}/manifest_processor.zip"
+  tags = var.tags
 }
 
 resource "aws_lambda_function" "manifest_processor" {
@@ -190,6 +197,7 @@ resource "aws_lambda_function" "manifest_processor" {
 resource "aws_iam_role" "manifest_processor" {
   name               = "${var.name_prefix}-manifest-processor-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.manifest_processor_assume.json
+  tags = var.tags
 }
 
 data "aws_iam_policy_document" "manifest_processor_assume" {
@@ -296,6 +304,7 @@ resource "aws_sns_topic_subscription" "cost_and_usage" {
 data "aws_s3_bucket_object" "csv_processor" {
   bucket = var.source_bucket
   key    = "${var.source_path}/csv_processor.zip"
+  tags = var.tags
 }
 
 resource "aws_lambda_function" "csv_processor" {
@@ -316,6 +325,7 @@ resource "aws_lambda_function" "csv_processor" {
 resource "aws_iam_role" "csv_processor" {
   name               = "${var.name_prefix}-csv-processor-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.csv_processor_assume.json
+  tags = var.tags
 }
 
 data "aws_iam_policy_document" "csv_processor_assume" {
