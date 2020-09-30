@@ -51,6 +51,7 @@ resource "aws_s3_bucket_notification" "cost_and_usage_notification" {
 
 resource "aws_sns_topic" "cost_and_usage" {
   name = "${var.name_prefix}-topic"
+  kms_master_key_id = var.sns_kms_key_id
 
   tags = var.tags
 }

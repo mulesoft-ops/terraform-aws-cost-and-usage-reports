@@ -61,6 +61,7 @@ resource "aws_s3_bucket_notification" "forward_bucket_notification" {
 
 resource "aws_sns_topic" "bucket_forwarder_topic" {
   name = "${var.prefix}-topic"
+  kms_master_key_id = var.sns_kms_key_id
 
   tags = var.tags  
 }

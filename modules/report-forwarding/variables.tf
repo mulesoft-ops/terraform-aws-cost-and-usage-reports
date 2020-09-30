@@ -37,3 +37,7 @@ variable "tags" {
   default     = {}
 }
 
+variable "sns_kms_key_id" {
+  description = "The KMS key to use for SNS data encryption."
+  default     = "alias/aws/sns"
+}
