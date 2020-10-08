@@ -59,9 +59,29 @@ resource "aws_s3_bucket_notification" "forward_bucket_notification" {
 # SNS
 # ------------------------------------------------------------------------------
 
+resource "aws_kms_key" "sns" {
+  description = "${var.prefix}-sns"
+  tags = var.tags
+  policy      = <<POLICY
+{
+    "Sid": "Allow_S3_for_CMK",
+    "Effect": "Allow",
+    "Principal": {
+        "Service":[
+            "s3.amazonaws.com"
+        ]
+    },
+    "Action": [
+        "kms:Decrypt","kms:GenerateDataKey"
+    ],
+    "Resource": "*"
+}  
+POLICY
+}
+
 resource "aws_sns_topic" "bucket_forwarder_topic" {
   name = "${var.prefix}-topic"
-  kms_master_key_id = var.sns_kms_key_id
+  kms_master_key_id = aws_kms_key.sns.key_id
 
   tags = var.tags  
 }

@@ -49,9 +49,29 @@ resource "aws_s3_bucket_notification" "cost_and_usage_notification" {
 # SNS
 # ------------------------------------------------------------------------------
 
+resource "aws_kms_key" "sns" {
+  description = "${var.name_prefix}-sns"
+  tags        = var.tags
+  policy      = <<POLICY
+{
+    "Sid": "Allow_S3_for_CMK",
+    "Effect": "Allow",
+    "Principal": {
+        "Service":[
+            "s3.amazonaws.com"
+        ]
+    },
+    "Action": [
+        "kms:Decrypt","kms:GenerateDataKey"
+    ],
+    "Resource": "*"
+}  
+POLICY
+}
+
 resource "aws_sns_topic" "cost_and_usage" {
-  name = "${var.name_prefix}-topic"
-  kms_master_key_id = var.sns_kms_key_id
+  name              = "${var.name_prefix}-topic"
+  kms_master_key_id = aws_kms_key.sns.key_id
 
   tags = var.tags
 }
@@ -170,7 +190,7 @@ resource "aws_glue_crawler" "glue_crawler" {
 data "aws_s3_bucket_object" "manifest_processor" {
   bucket = var.source_bucket
   key    = "${var.source_path}/manifest_processor.zip"
-  tags = var.tags
+  tags   = var.tags
 }
 
 resource "aws_lambda_function" "manifest_processor" {
@@ -198,7 +218,7 @@ resource "aws_lambda_function" "manifest_processor" {
 resource "aws_iam_role" "manifest_processor" {
   name               = "${var.name_prefix}-manifest-processor-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.manifest_processor_assume.json
-  tags = var.tags
+  tags               = var.tags
 }
 
 data "aws_iam_policy_document" "manifest_processor_assume" {
@@ -305,7 +325,7 @@ resource "aws_sns_topic_subscription" "cost_and_usage" {
 data "aws_s3_bucket_object" "csv_processor" {
   bucket = var.source_bucket
   key    = "${var.source_path}/csv_processor.zip"
-  tags = var.tags
+  tags   = var.tags
 }
 
 resource "aws_lambda_function" "csv_processor" {
@@ -326,7 +346,7 @@ resource "aws_lambda_function" "csv_processor" {
 resource "aws_iam_role" "csv_processor" {
   name               = "${var.name_prefix}-csv-processor-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.csv_processor_assume.json
-  tags = var.tags
+  tags               = var.tags
 }
 
 data "aws_iam_policy_document" "csv_processor_assume" {
