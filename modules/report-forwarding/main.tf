@@ -64,18 +64,23 @@ resource "aws_kms_key" "sns" {
   tags = var.tags
   policy      = <<POLICY
 {
-    "Sid": "Allow_S3_for_CMK",
-    "Effect": "Allow",
-    "Principal": {
-        "Service":[
-            "s3.amazonaws.com"
-        ]
-    },
-    "Action": [
-        "kms:Decrypt","kms:GenerateDataKey"
-    ],
-    "Resource": "*"
-}  
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+        "Sid": "Allow_S3_for_CMK",
+        "Effect": "Allow",
+        "Principal": {
+            "Service":[
+                "s3.amazonaws.com"
+            ]
+        },
+        "Action": [
+            "kms:Decrypt","kms:GenerateDataKey"
+        ],
+        "Resource": "*"
+        }
+    ]
+}
 POLICY
 }
 
