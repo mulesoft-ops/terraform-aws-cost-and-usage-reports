@@ -52,21 +52,47 @@ resource "aws_s3_bucket_notification" "cost_and_usage_notification" {
 resource "aws_kms_key" "sns" {
   description = "${var.name_prefix}-sns"
   tags        = var.tags
-  policy      = <<POLICY
-{
-    "Sid": "Allow_S3_for_CMK",
-    "Effect": "Allow",
-    "Principal": {
-        "Service":[
-            "s3.amazonaws.com"
-        ]
-    },
-    "Action": [
-        "kms:Decrypt","kms:GenerateDataKey"
-    ],
-    "Resource": "*"
-}  
-POLICY
+  policy      = data.aws_iam_policy_document.kms_policy.json
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "kms_policy" {
+  statement {
+    sid    = "Allow root to manage this key"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    actions = [
+      "kms:*"
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
+
+  statement {
+    sid    = "Allow S3 to use this key"
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["s3.amazonaws.com"]
+    }
+
+    actions = [
+      "kms:Decrypt","kms:GenerateDataKey"
+    ]
+
+    resources = [
+      "*"
+    ]
+  }
 }
 
 resource "aws_sns_topic" "cost_and_usage" {
